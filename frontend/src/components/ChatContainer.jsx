@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Send, Image as ImageIcon, Loader2, Bot } from 'lucide-react';
 import { sendMessage, uploadImage } from '../api';
 import Message from './Message';
 
@@ -106,26 +106,25 @@ function ChatContainer({
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+    <div className="flex-1 flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4">
-              <span className="text-4xl">🤖</span>
+          <div className="flex flex-col items-center justify-center h-full text-center p-6">
+            <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-6 border border-blue-200 dark:border-blue-800">
+              <Bot className="w-10 h-10 text-blue-600 dark:text-blue-400" />
             </div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
               Welcome to RoboBrain 2.0
             </h2>
-            <p className="text-gray-500 max-w-md mb-6">
-              Upload an image and start asking questions. I can help with general Q&A, 
-              visual grounding, affordance detection, trajectory planning, and pointing tasks.
+            <p className="text-gray-600 dark:text-gray-400 max-w-md mb-8 leading-relaxed">
+              Upload an image and start asking questions. I can help with general Q&A, visual grounding, affordance detection, trajectory planning, and pointing tasks.
             </p>
             
             {!currentImage && (
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm hover:shadow-md"
               >
                 <ImageIcon className="w-5 h-5" />
                 <span>Upload an Image to Start</span>
@@ -160,17 +159,17 @@ function ChatContainer({
       )}
 
       {/* Input Area */}
-      <div className="p-4 bg-white border-t border-gray-200">
+      <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
           <div className="flex items-end gap-3">
             {/* Image Upload Button */}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex-shrink-0 p-3 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+              className="flex-shrink-0 p-3 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               title="Upload image"
             >
-              <ImageIcon className="w-5 h-5 text-gray-600" />
+              <ImageIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             </button>
             <input
               ref={fileInputRef}
@@ -194,7 +193,7 @@ function ChatContainer({
                 placeholder={currentImage ? "Ask about the image..." : "Upload an image first..."}
                 disabled={!currentImage || isLoading}
                 rows={1}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 style={{ maxHeight: '150px' }}
               />
             </div>
@@ -203,7 +202,7 @@ function ChatContainer({
             <button
               type="submit"
               disabled={!input.trim() || !currentImage || isLoading}
-              className="flex-shrink-0 p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+              className="flex-shrink-0 p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -214,13 +213,13 @@ function ChatContainer({
           </div>
 
           {/* Task Indicator */}
-          <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+          <div className="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
             <span>Current task:</span>
-            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">
+            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full font-medium">
               {currentTask}
             </span>
             {enableThinking && (
-              <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full font-medium">
+              <span className="px-2 py-0.5 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 rounded-full font-medium">
                 thinking enabled
               </span>
             )}

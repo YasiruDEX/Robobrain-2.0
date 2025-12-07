@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, Bot, ChevronDown, ChevronUp, AlertCircle, Loader2, Image as ImageIcon, ZoomIn } from 'lucide-react';
+import { User, Bot, ChevronDown, ChevronUp, AlertCircle, Loader2, Image as ImageIcon, ZoomIn, MapPin } from 'lucide-react';
 
 function Message({ message }) {
   const [showThinking, setShowThinking] = useState(false);
@@ -10,11 +10,11 @@ function Message({ message }) {
     <div className={`flex gap-3 message-enter ${isUser ? 'flex-row-reverse' : ''}`}>
       {/* Avatar */}
       <div
-        className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg ${isUser
-          ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
+        className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${isUser
+          ? 'bg-blue-600 text-white'
           : message.isError
-            ? 'bg-gradient-to-br from-red-500 to-red-600 text-white'
-            : 'bg-gradient-to-br from-purple-500 to-blue-600 text-white'
+            ? 'bg-red-600 text-white'
+            : 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400 border border-blue-200 dark:border-blue-800'
           }`}
       >
         {isUser ? (
@@ -34,33 +34,33 @@ function Message({ message }) {
             <img
               src={message.image}
               alt="Uploaded"
-              className="max-w-xs max-h-48 rounded-lg border border-gray-200 object-cover"
+              className="max-w-xs max-h-48 rounded-lg border border-gray-200 dark:border-gray-700 object-cover"
             />
           </div>
         )}
 
         {/* Message Bubble */}
         <div
-          className={`inline-block px-5 py-3.5 rounded-2xl shadow-md ${isUser
-            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md'
+          className={`inline-block px-5 py-3.5 rounded-2xl shadow-sm ${isUser
+            ? 'bg-blue-600 text-white rounded-br-md'
             : message.isError
-              ? 'bg-red-50 text-red-800 border-2 border-red-200 rounded-bl-md'
-              : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
+              ? 'bg-red-50 text-red-800 border-2 border-red-200 rounded-bl-md dark:bg-red-900/20 dark:text-red-300 dark:border-red-900'
+              : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700'
             }`}
         >
           {message.isLoading ? (
-            <div className="flex items-center gap-2 text-gray-500">
+            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="loading-dots">Thinking</span>
             </div>
           ) : (
             <div className="whitespace-pre-wrap">
               {message.content || (message.thinking ? (
-                <span className="text-gray-500 italic">
+                <span className="text-gray-500 dark:text-gray-400 italic">
                   (See reasoning below)
                 </span>
               ) : (
-                <span className="text-gray-400 italic">
+                <span className="text-gray-400 dark:text-gray-500 italic">
                   (No response content)
                 </span>
               ))}
@@ -73,7 +73,7 @@ function Message({ message }) {
           <div className="mt-2">
             <button
               onClick={() => setShowThinking(!showThinking)}
-              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
+              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
             >
               {showThinking ? (
                 <>
@@ -89,8 +89,11 @@ function Message({ message }) {
             </button>
 
             {(showThinking || !message.content) && (
-              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 font-mono">
-                <p className="text-xs font-medium text-blue-600 mb-1">📍 Raw Coordinates:</p>
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 font-mono dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200">
+                <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1 flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  Raw Coordinates:
+                </p>
                 <div className="whitespace-pre-wrap text-xs">{message.thinking}</div>
               </div>
             )}

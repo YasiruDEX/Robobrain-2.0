@@ -76,6 +76,7 @@ function ChatContainer({
         thinking: response.thinking,
         outputImage: response.output_image,
         task: response.task,
+        taskSource: response.task_source,
         isLoading: false,
       });
     } catch (error) {

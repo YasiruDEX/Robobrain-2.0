@@ -32,7 +32,10 @@ function Message({ message }) {
         {!isUser && message.task && (
           <div className="flex items-center gap-1.5 mb-1.5 text-xs text-gray-500 dark:text-gray-400 ml-1">
             <Sparkles className="w-3 h-3 text-blue-500" />
-            <span>Task: <span className="font-medium text-gray-700 dark:text-gray-300 capitalize">{message.task}</span></span>
+            <span>
+              {message.taskSource === 'auto' ? 'Auto-detected Task: ' : 'Task: '}
+              <span className="font-medium text-gray-700 dark:text-gray-300 capitalize">{message.task}</span>
+            </span>
           </div>
         )}
 

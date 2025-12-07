@@ -10,7 +10,7 @@ import concurrent.futures
 from typing import List, Dict
 import sys
 
-BASE_URL = "https://h847mxpg-5001.inc1.devtunnels.ms/"
+BASE_URL = "https://h847mxpg-https://h847mxpg-5001.inc1.devtunnels.ms/.inc1.devtunnels.ms/"
 
 def check_backend_health() -> bool:
     """Check if backend is running."""

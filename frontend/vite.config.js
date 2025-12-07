@@ -7,15 +7,15 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:5001',
+        target: 'https://h847mxpg-5001.inc1.devtunnels.ms/',
         changeOrigin: true,
       },
       '/result': {
-        target: 'http://localhost:5001',
+        target: 'https://h847mxpg-5001.inc1.devtunnels.ms/',
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'http://localhost:5001',
+        target: 'https://h847mxpg-5001.inc1.devtunnels.ms/',
         changeOrigin: true,
       }
     }

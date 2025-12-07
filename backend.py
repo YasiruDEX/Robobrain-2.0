@@ -5,6 +5,10 @@ import uuid
 import signal
 import psutil
 import atexit
+
+# Set PyTorch memory configuration to avoid fragmentation
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -259,11 +263,13 @@ def chat():
     task = data.get('task', 'general')
     enable_thinking = data.get('enable_thinking', True)
     
+    detected_task_source = None
     if task == 'auto':
         print(f"Auto-detecting task for prompt: {message}")
         detected_task = classify_task_with_groq(message)
         print(f"Detected task: {detected_task}")
         task = detected_task
+        detected_task_source = "auto"
 
     if not session_id:
         return jsonify({"error": "Missing session ID"}), 400
@@ -320,6 +326,7 @@ def chat():
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
                 torch.cuda.synchronize()
+                gc.collect()
     
     # If there is an output image, convert path to URL
     if response.get('output_image'):
@@ -328,6 +335,8 @@ def chat():
 
     # Add the task that was actually used
     response['task'] = task
+    if detected_task_source:
+        response['task_source'] = detected_task_source
 
     return jsonify(response)
 

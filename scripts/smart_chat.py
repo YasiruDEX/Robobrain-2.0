@@ -16,6 +16,7 @@ import sys
 import pathlib
 import re
 import json
+import os
 from datetime import datetime
 
 # Add scripts directory to path
@@ -46,8 +47,8 @@ except ImportError:
 # Results directory
 RESULTS_DIR = pathlib.Path(__file__).parent.parent / "results" / "interactive"
 
-# Groq API Key - set via environment variable GROQ_API_KEY
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+# Groq API Key - set via environment variable GROQ_API_KEY or hardcoded fallback
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "groq_api_key_here")
 
 
 # ============================================================================

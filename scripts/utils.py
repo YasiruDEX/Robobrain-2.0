@@ -72,6 +72,7 @@ def get_model(model_name=None, force_cpu=False, use_local_weights=True, load_in_
             login(token=token)
 
     device = "cuda" if (torch.cuda.is_available() and not force_cpu) else "cpu"
+    device_map = "auto" if device == "cuda" else "cpu"
     print(f"Using device: {device} — model path: {model_path}")
 
     # Clear GPU cache before loading model to avoid OOM
@@ -81,7 +82,9 @@ def get_model(model_name=None, force_cpu=False, use_local_weights=True, load_in_
         gc.collect()
         print(f"GPU Memory before load: {torch.cuda.memory_allocated() / 1e9:.2f} GB allocated")
     
-    model = UnifiedInference(model_path, load_in_8bit=load_in_8bit)
+    # Note: load_in_8bit is not supported by UnifiedInference
+    # The model uses torch_dtype="auto" by default for quantization
+    model = UnifiedInference(model_path, device_map=device_map)
     print("✅ Model loaded.")
     
     if torch.cuda.is_available():

@@ -1,4 +1,67 @@
 /**
+ * Resize image if dimensions exceed maxDimension while maintaining aspect ratio
+ * @param {string} imageSrc - Base64 or URL of the image
+ * @param {number} maxDimension - Maximum width or height (default: 2000)
+ * @returns {Promise<Object>} - Object containing resized image data and scale factor
+ */
+export const resizeImageIfNeeded = (imageSrc, maxDimension = 2000) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = () => {
+      const { width, height } = img;
+      const maxDim = Math.max(width, height);
+      
+      // If image is within limits, return original
+      if (maxDim <= maxDimension) {
+        resolve({
+          dataUrl: imageSrc,
+          scaleFactor: 1,
+          originalWidth: width,
+          originalHeight: height,
+          newWidth: width,
+          newHeight: height
+        });
+        return;
+      }
+      
+      // Calculate new dimensions maintaining aspect ratio
+      const scaleFactor = maxDimension / maxDim;
+      const newWidth = Math.round(width * scaleFactor);
+      const newHeight = Math.round(height * scaleFactor);
+      
+      // Create canvas and resize
+      const canvas = document.createElement('canvas');
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+      const ctx = canvas.getContext('2d');
+      
+      // Use high quality image smoothing
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      
+      ctx.drawImage(img, 0, 0, newWidth, newHeight);
+      
+      resolve({
+        dataUrl: canvas.toDataURL('image/jpeg', 0.92),
+        scaleFactor,
+        originalWidth: width,
+        originalHeight: height,
+        newWidth,
+        newHeight
+      });
+    };
+    
+    img.onerror = () => {
+      reject(new Error('Failed to load image for resizing'));
+    };
+    
+    img.src = imageSrc;
+  });
+};
+
+/**
  * Draw annotations on an image canvas
  * @param {string} imageSrc - Base64 or URL of the image
  * @param {Object} annotations - Object containing points, boxes, or trajectories

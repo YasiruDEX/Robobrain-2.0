@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Image as ImageIcon, Loader2, Bot } from 'lucide-react';
 import { sendMessage, uploadImage } from '../api';
-import { annotateImage, parseCoordinates } from '../utils/imageAnnotation';
+import { annotateImage, parseCoordinates, resizeImageIfNeeded } from '../utils/imageAnnotation';
 import Message from './Message';
 
 function ChatContainer({
@@ -114,16 +114,48 @@ function ChatContainer({
     }
   };
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        onImageUpload({
-          file,
-          preview: reader.result,
-          name: file.name,
-        });
+      reader.onloadend = async () => {
+        const originalImage = reader.result;
+        
+        try {
+          // Resize image if needed (max dimension 2000px)
+          const resizedResult = await resizeImageIfNeeded(originalImage, 2000);
+          
+          if (resizedResult.scaleFactor < 1) {
+            console.log(`Image resized: ${resizedResult.originalWidth}x${resizedResult.originalHeight} → ${resizedResult.newWidth}x${resizedResult.newHeight}`);
+          }
+          
+          // Convert resized data URL back to File object for upload
+          const blob = await fetch(resizedResult.dataUrl).then(r => r.blob());
+          const resizedFile = new File([blob], file.name, { type: 'image/jpeg' });
+          
+          onImageUpload({
+            file: resizedFile,
+            preview: resizedResult.dataUrl,
+            name: file.name,
+            scaleFactor: resizedResult.scaleFactor,
+            originalDimensions: {
+              width: resizedResult.originalWidth,
+              height: resizedResult.originalHeight
+            },
+            newDimensions: {
+              width: resizedResult.newWidth,
+              height: resizedResult.newHeight
+            }
+          });
+        } catch (error) {
+          console.error('Failed to resize image:', error);
+          // Fallback to original if resize fails
+          onImageUpload({
+            file,
+            preview: originalImage,
+            name: file.name,
+          });
+        }
       };
       reader.readAsDataURL(file);
     }

@@ -53,9 +53,6 @@ RESULTS_DIR = pathlib.Path(__file__).parent.parent / "results" / "pipeline"
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "your_api_key_here")
 
 
-# ============================================================================
-# AVAILABLE ROBOBRAIN TASKS
-# ============================================================================
 
 ROBOBRAIN_TASKS = {
     "general": {

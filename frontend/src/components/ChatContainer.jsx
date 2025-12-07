@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Image as ImageIcon, Loader2, Bot } from 'lucide-react';
 import { sendMessage, uploadImage } from '../api';
+import { annotateImage, parseCoordinates } from '../utils/imageAnnotation';
 import Message from './Message';
 
 function ChatContainer({
@@ -70,11 +71,33 @@ function ChatContainer({
         enableThinking,
       });
 
+      // If no output image but task requires visualization, annotate on frontend
+      let finalOutputImage = response.output_image;
+      
+      if (!finalOutputImage && response.task !== 'general' && currentImage?.preview) {
+        console.log('No backend image, attempting frontend annotation...');
+        const textToUse = response.answer || response.thinking || '';
+        const annotations = parseCoordinates(textToUse, response.task);
+        
+        if (annotations.points || annotations.boxes || annotations.trajectories) {
+          try {
+            finalOutputImage = await annotateImage(currentImage.preview, annotations);
+            console.log('✓ Frontend annotation successful');
+          } catch (err) {
+            console.error('Frontend annotation failed:', err);
+            finalOutputImage = currentImage.preview; // Fallback to original
+          }
+        } else {
+          console.log('No coordinates found to annotate');
+          finalOutputImage = currentImage.preview;
+        }
+      }
+
       // Update assistant message with response
       updateLastMessage({
         content: response.answer,
         thinking: response.thinking,
-        outputImage: response.output_image || (response.task !== 'general' && currentImage?.preview ? currentImage.preview : null),
+        outputImage: finalOutputImage,
         task: response.task,
         taskSource: response.task_source,
         isLoading: false,

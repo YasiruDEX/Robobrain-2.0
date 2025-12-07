@@ -5,6 +5,15 @@ __pycache__/
 .kaggle/
 .vscode/
 .venv/
-weights
-\node_modules
+weights/
+node_modules/
 result/
+uploads/
+conversations/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/

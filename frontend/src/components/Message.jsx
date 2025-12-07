@@ -120,10 +120,11 @@ function Message({ message }) {
             </div>
             <div className="relative group">
               <img
-                src={message.outputImage}
+                src={message.outputImage.startsWith('http') ? message.outputImage : `${import.meta.env.VITE_API_URL || ''}${message.outputImage}`}
                 alt="Model output visualization"
                 className="max-w-md rounded-lg border-2 border-green-200 shadow-md cursor-pointer hover:border-green-400 transition-colors"
                 onClick={() => setShowFullImage(true)}
+                onError={(e) => { e.target.onerror = null; e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" fill="%23999"%3EImage unavailable%3C/text%3E%3C/svg%3E'; }}
               />
               <button
                 onClick={() => setShowFullImage(true)}
@@ -141,7 +142,7 @@ function Message({ message }) {
               >
                 <div className="relative max-w-4xl max-h-full">
                   <img
-                    src={message.outputImage}
+                    src={message.outputImage.startsWith('http') ? message.outputImage : `${import.meta.env.VITE_API_URL || ''}${message.outputImage}`}
                     alt="Model output visualization (full size)"
                     className="max-w-full max-h-[90vh] rounded-lg"
                   />

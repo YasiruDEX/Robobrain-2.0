@@ -12,7 +12,7 @@ function Header({ isConnected, sessionId, onToggleSidebar, sidebarOpen }) {
             <Menu className="w-5 h-5 text-white" />
           </button>
         )}
-        
+
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg border border-white/30">
             <span className="text-2xl">🤖</span>
@@ -26,11 +26,10 @@ function Header({ isConnected, sessionId, onToggleSidebar, sidebarOpen }) {
 
       <div className="flex items-center gap-4">
         {/* Connection Status */}
-        <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium shadow-md ${
-          isConnected 
-            ? 'bg-green-500 text-white' 
+        <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium shadow-md ${isConnected
+            ? 'bg-green-500 text-white'
             : 'bg-red-500 text-white'
-        }`}>
+          }`}>
           {isConnected ? (
             <>
               <Wifi className="w-4 h-4" />

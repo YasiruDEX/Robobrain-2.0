@@ -150,18 +150,16 @@ function Sidebar({
                 <button
                   key={task.id}
                   onClick={() => onTaskChange(task.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 shadow-sm hover:shadow-md ${
-                    currentTask === task.id
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 shadow-sm hover:shadow-md ${currentTask === task.id
                       ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white border-2 border-blue-400 shadow-lg'
                       : 'hover:bg-gray-50 text-gray-700 border-2 border-gray-200 bg-white'
-                  }`}
+                    }`}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <div className="min-w-0">
                     <p className="font-medium text-sm">{task.name}</p>
-                    <p className={`text-xs truncate ${
-                      currentTask === task.id ? 'text-blue-100' : 'text-gray-500'
-                    }`}>
+                    <p className={`text-xs truncate ${currentTask === task.id ? 'text-blue-100' : 'text-gray-500'
+                      }`}>
                       {task.description}
                     </p>
                   </div>

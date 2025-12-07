@@ -208,7 +208,8 @@ class MultiTurnInference:
         image_path: Optional[str] = None,
         task: str = "general",
         enable_thinking: bool = True,
-        do_sample: bool = True
+        do_sample: bool = True,
+        plot: bool = False
     ) -> Dict[str, Any]:
         """
         Ask a question with conversation context.
@@ -219,9 +220,10 @@ class MultiTurnInference:
             task: Task type (general, grounding, affordance, trajectory, pointing)
             enable_thinking: Whether to enable model's thinking mode
             do_sample: Whether to use sampling
+            plot: Whether to plot results on image (for visual tasks)
             
         Returns:
-            Dict with 'answer', optionally 'thinking', and 'context_used'
+            Dict with 'answer', optionally 'thinking', 'output_image', and 'context_used'
         """
         # Use provided image or fall back to current
         img = image_path or self.memory.current_image
@@ -246,45 +248,62 @@ class MultiTurnInference:
                 img, 
                 task=task,
                 enable_thinking=enable_thinking,
-                do_sample=do_sample
+                do_sample=do_sample,
+                plot=plot
             )
         except Exception as e:
             error_msg = f"Inference error: {str(e)}"
             # Remove the failed user turn to keep history clean
             if self.memory.turns and self.memory.turns[-1].role == "user":
                 self.memory.turns.pop()
-            return {"error": error_msg}
+            return {"error": error_msg, "answer": error_msg, "turn_number": len(self.memory), "context_used": False}
         
-        # Extract answer
-        answer = result.get("answer", "")
-        thinking = result.get("thinking", "")
+        # Handle different result formats
+        if result is None:
+            answer = "No response from model"
+            thinking = ""
+            output_image = None
+        elif isinstance(result, dict):
+            answer = result.get("answer", str(result))
+            thinking = result.get("thinking", "")
+            output_image = result.get("output_image")
+        elif isinstance(result, str):
+            answer = result
+            thinking = ""
+            output_image = None
+        else:
+            answer = str(result)
+            thinking = ""
+            output_image = None
         
         # Add assistant response to memory
-        self.memory.add_assistant_turn(answer, {"thinking": thinking, "task": task})
+        self.memory.add_assistant_turn(answer, {"thinking": thinking, "task": task, "output_image": output_image})
         
         # Return enriched result
         return {
             "answer": answer,
             "thinking": thinking,
+            "output_image": output_image,
             "context_used": self.use_context and len(self.memory) > 2,
-            "turn_number": len(self.memory)
+            "turn_number": len(self.memory),
+            "task": task
         }
     
-    def ground(self, object_description: str, image_path: Optional[str] = None) -> Dict[str, Any]:
+    def ground(self, object_description: str, image_path: Optional[str] = None, plot: bool = False) -> Dict[str, Any]:
         """Shortcut for grounding task."""
-        return self.ask(object_description, image_path, task="grounding")
+        return self.ask(object_description, image_path, task="grounding", plot=plot)
     
-    def get_affordance(self, action: str, image_path: Optional[str] = None) -> Dict[str, Any]:
+    def get_affordance(self, action: str, image_path: Optional[str] = None, plot: bool = False) -> Dict[str, Any]:
         """Shortcut for affordance task."""
-        return self.ask(action, image_path, task="affordance")
+        return self.ask(action, image_path, task="affordance", plot=plot)
     
-    def get_trajectory(self, action: str, image_path: Optional[str] = None) -> Dict[str, Any]:
+    def get_trajectory(self, action: str, image_path: Optional[str] = None, plot: bool = False) -> Dict[str, Any]:
         """Shortcut for trajectory task."""
-        return self.ask(action, image_path, task="trajectory")
+        return self.ask(action, image_path, task="trajectory", plot=plot)
     
-    def point_at(self, description: str, image_path: Optional[str] = None) -> Dict[str, Any]:
+    def point_at(self, description: str, image_path: Optional[str] = None, plot: bool = False) -> Dict[str, Any]:
         """Shortcut for pointing task."""
-        return self.ask(description, image_path, task="pointing")
+        return self.ask(description, image_path, task="pointing", plot=plot)
     
     def reset(self) -> None:
         """Clear conversation memory and start fresh."""

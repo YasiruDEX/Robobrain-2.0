@@ -34,7 +34,7 @@ def setup_repo():
     
     return REPO_DIR
 
-def get_model(model_name=None, force_cpu=False, use_local_weights=True):
+def get_model(model_name=None, force_cpu=False, use_local_weights=True, load_in_8bit=True):
     """Loads the UnifiedInference model from local weights or HuggingFace.
     
     Args:
@@ -42,6 +42,7 @@ def get_model(model_name=None, force_cpu=False, use_local_weights=True):
                     uses the local weights folder.
         force_cpu: Force CPU inference even if CUDA is available.
         use_local_weights: If True and weights folder exists, load from local weights.
+        load_in_8bit: Enable 8-bit quantization to reduce memory (6GB -> ~3GB).
     """
     setup_repo()
     
@@ -73,7 +74,17 @@ def get_model(model_name=None, force_cpu=False, use_local_weights=True):
     device = "cuda" if (torch.cuda.is_available() and not force_cpu) else "cpu"
     print(f"Using device: {device} — model path: {model_path}")
 
-    print("Loading Checkpoint ...")
-    model = UnifiedInference(model_path)
+    # Clear GPU cache before loading model to avoid OOM
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        import gc
+        gc.collect()
+        print(f"GPU Memory before load: {torch.cuda.memory_allocated() / 1e9:.2f} GB allocated")
+    
+    model = UnifiedInference(model_path, load_in_8bit=load_in_8bit)
     print("✅ Model loaded.")
+    
+    if torch.cuda.is_available():
+        print(f"GPU Memory after load: {torch.cuda.memory_allocated() / 1e9:.2f} GB allocated")
+    
     return model, REPO_DIR

@@ -4,7 +4,7 @@ torch>=2.1.0
 timm>=0.9.16
 pillow
 sentencepiece
-bitsandbytes
+bitsandbytes>=0.41.0
 matplotlib
 huggingface_hub
 python-dotenv
@@ -12,3 +12,9 @@ python-dotenv
 # Notebook helpers
 decorator
 pygments
+
+# Backend
+flask
+flask-cors
+psutil
+groq

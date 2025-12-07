@@ -373,8 +373,6 @@ Respond with ONLY the enhanced prompt, nothing else."""
 
 
 # ============================================================================
-# PIPELINE EXECUTOR
-# ============================================================================
 
 class PipelineExecutor:
     """Executes a pipeline of RoboBrain tasks."""

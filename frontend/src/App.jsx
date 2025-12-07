@@ -21,11 +21,11 @@ function App() {
         // Check backend health
         const health = await checkHealth();
         setIsConnected(health.status === 'healthy');
-        
+
         // Get available tasks
         const tasksData = await getTasks();
         setAvailableTasks(tasksData.tasks || []);
-        
+
         // Create session
         const session = await createSession();
         setSessionId(session.session_id);
@@ -34,7 +34,7 @@ function App() {
         setIsConnected(false);
       }
     };
-    
+
     init();
   }, []);
 
@@ -92,7 +92,7 @@ function App() {
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           sidebarOpen={sidebarOpen}
         />
-        
+
         <ChatContainer
           sessionId={sessionId}
           currentImage={currentImage}

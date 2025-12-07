@@ -1,11 +1,11 @@
-import { 
-  X, 
-  Plus, 
-  Image as ImageIcon, 
-  Brain, 
-  Target, 
-  Hand, 
-  Route, 
+import {
+  X,
+  Plus,
+  Image as ImageIcon,
+  Brain,
+  Target,
+  Hand,
+  Route,
   MousePointer,
   MessageSquare,
   Upload,
@@ -96,7 +96,7 @@ function Sidebar({
             <ImageIcon className="w-4 h-4 inline mr-1.5" />
             Current Image
           </label>
-          
+
           <div
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -142,7 +142,7 @@ function Sidebar({
             <Target className="w-4 h-4 inline mr-1.5" />
             Task Type
           </label>
-          
+
           <div className="space-y-2">
             {availableTasks.map((task) => {
               const Icon = taskIcons[task.id] || MessageSquare;
@@ -150,11 +150,10 @@ function Sidebar({
                 <button
                   key={task.id}
                   onClick={() => onTaskChange(task.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
-                    currentTask === task.id
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${currentTask === task.id
                       ? 'bg-blue-50 text-blue-700 border border-blue-200'
                       : 'hover:bg-gray-50 text-gray-700 border border-transparent'
-                  }`}
+                    }`}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <div className="min-w-0">

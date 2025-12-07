@@ -72,6 +72,43 @@ def classify_task_with_groq(prompt):
         print(f"Groq classification error: {e}")
         return 'general'
 
+def generate_conversation_name(first_message):
+    """Generate a short conversation name from the first message using Groq."""
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        return None
+    
+    try:
+        client = Groq(api_key=api_key)
+        
+        system_prompt = """
+        Generate a very short (2-4 words) conversation title based on the user's message.
+        Be concise and descriptive. Return ONLY the title, no quotes or extra text.
+        Examples:
+        - "Find the apple in this image" -> "Find Apple"
+        - "How do I grasp this cup?" -> "Grasping Cup"
+        - "What's in this picture?" -> "Image Description"
+        - "Plan a path to the door" -> "Path Planning"
+        """
+        
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": first_message[:200]},  # Limit length
+            ],
+            model="llama-3.3-70b-versatile",
+            temperature=0.3,
+            max_tokens=20,
+        )
+        
+        title = chat_completion.choices[0].message.content.strip()
+        # Remove quotes if present
+        title = title.strip('"').strip("'")
+        return title[:50]  # Max 50 chars
+    except Exception as e:
+        print(f"Groq title generation error: {e}")
+        return None
+
 def cleanup_old_processes():
     """Kill any existing backend.py processes to free GPU memory."""
     current_pid = os.getpid()
@@ -309,7 +346,7 @@ def chat():
 
         print(f"Processing chat for session {session_id}: {message[:50]}...")
         
-        # Determine if we should plot
+        # Force plotting for all visual tasks (non-general tasks MUST show images)
         should_plot = task in ['pointing', 'affordance', 'trajectory', 'grounding']
 
         # Run inference inside the lock to prevent concurrent GPU usage
@@ -318,7 +355,7 @@ def chat():
                 prompt=message,
                 task=task,
                 enable_thinking=enable_thinking,
-                plot=should_plot
+                plot=should_plot  # Always True for visual tasks
             )
         finally:
             # Clean up GPU memory after inference
@@ -356,6 +393,26 @@ def get_history(session_id):
             })
         return jsonify(history)
     return jsonify({"error": "Session not found"}), 404
+
+@app.route('/api/generate-title', methods=['POST'])
+def generate_title():
+    """Generate a conversation title from the first message."""
+    data = request.json
+    message = data.get('message', '')
+    
+    if not message:
+        return jsonify({"error": "Message is required"}), 400
+    
+    title = generate_conversation_name(message)
+    if title:
+        return jsonify({"title": title})
+    else:
+        # Fallback to first few words
+        words = message.split()[:3]
+        fallback_title = ' '.join(words)
+        if len(fallback_title) > 30:
+            fallback_title = fallback_title[:27] + '...'
+        return jsonify({"title": fallback_title})
 
 @app.route('/api/tasks', methods=['GET'])
 def get_tasks():

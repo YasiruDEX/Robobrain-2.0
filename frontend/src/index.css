@@ -86,3 +86,19 @@ body {
   content: '';
   animation: dots 1.5s steps(1, end) infinite;
 }
+
+/* Image reveal animation (unblur from top to bottom) */
+@keyframes revealImage {
+  from {
+    clip-path: inset(0 0 100% 0);
+    filter: blur(10px);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    filter: blur(0px);
+  }
+}
+
+.image-reveal {
+  animation: revealImage 0.8s ease-out forwards;
+}

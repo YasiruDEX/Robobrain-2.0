@@ -1,10 +1,38 @@
-import { useState } from 'react';
-import { User, Bot, ChevronDown, ChevronUp, AlertCircle, Loader2, Image as ImageIcon, ZoomIn, MapPin, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { User, Bot, ChevronDown, ChevronUp, AlertCircle, Loader2, Image as ImageIcon, ZoomIn, MapPin, Sparkles, Zap } from 'lucide-react';
+
+// Typing animation component
+const TypingText = ({ text, speed = 20 }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, speed);
+      return () => clearTimeout(timeout);
+    }
+  }, [currentIndex, text, speed]);
+
+  return <span>{displayedText}</span>;
+};
 
 function Message({ message }) {
   const [showThinking, setShowThinking] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
+  const [showTyping, setShowTyping] = useState(!message.isLoading && message.role === 'assistant' && message.content);
+  const [imageRevealed, setImageRevealed] = useState(false);
   const isUser = message.role === 'user';
+
+  // Trigger image reveal animation when image is loaded
+  useEffect(() => {
+    if (message.outputImage && !message.isLoading) {
+      const timer = setTimeout(() => setImageRevealed(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [message.outputImage, message.isLoading]);
 
   return (
     <div className={`flex gap-3 message-enter ${isUser ? 'flex-row-reverse' : ''}`}>
@@ -30,11 +58,25 @@ function Message({ message }) {
       <div className={`flex-1 max-w-2xl ${isUser ? 'text-right' : ''}`}>
         {/* Detected Task Badge (for assistant) */}
         {!isUser && message.task && (
-          <div className="flex items-center gap-1.5 mb-1.5 text-xs text-gray-500 dark:text-gray-400 ml-1">
-            <Sparkles className="w-3 h-3 text-blue-500" />
+          <div className={`flex items-center gap-1.5 mb-1.5 text-xs ml-1 ${
+            message.taskSource === 'auto' 
+              ? 'text-green-600 dark:text-green-400' 
+              : 'text-blue-500 dark:text-blue-400'
+          }`}>
+            {message.taskSource === 'auto' ? (
+              <Zap className="w-3.5 h-3.5" />
+            ) : (
+              <Sparkles className="w-3 h-3" />
+            )}
             <span>
-              {message.taskSource === 'auto' ? 'Auto-detected Task: ' : 'Task: '}
-              <span className="font-medium text-gray-700 dark:text-gray-300 capitalize">{message.task}</span>
+              {message.taskSource === 'auto' ? 'Auto-detected: ' : 'Task: '}
+              <span className={`font-medium capitalize ${
+                message.taskSource === 'auto'
+                  ? 'text-green-700 dark:text-green-300'
+                  : 'text-blue-700 dark:text-blue-300'
+              }`}>
+                {message.task}
+              </span>
             </span>
           </div>
         )}
@@ -62,19 +104,27 @@ function Message({ message }) {
           {message.isLoading ? (
             <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="loading-dots">Thinking</span>
+              <span className="loading-dots">Generating response</span>
             </div>
           ) : (
             <div className="whitespace-pre-wrap">
-              {message.content || (message.thinking ? (
-                <span className="text-gray-500 dark:text-gray-400 italic">
-                  (See reasoning below)
-                </span>
+              {message.content ? (
+                showTyping && !isUser ? (
+                  <TypingText text={message.content} speed={15} />
+                ) : (
+                  message.content
+                )
               ) : (
-                <span className="text-gray-400 dark:text-gray-500 italic">
-                  (No response content)
-                </span>
-              ))}
+                message.thinking ? (
+                  <span className="text-gray-500 dark:text-gray-400 italic">
+                    (See coordinates below)
+                  </span>
+                ) : (
+                  <span className="text-gray-400 dark:text-gray-500 italic">
+                    (No response content)
+                  </span>
+                )
+              )}
             </div>
           )}
         </div>
@@ -115,14 +165,28 @@ function Message({ message }) {
         {!isUser && message.outputImage && !message.isLoading && (
           <div className="mt-3">
             <div className="flex items-center gap-2 mb-2">
-              <ImageIcon className="w-4 h-4 text-green-600" />
-              <p className="text-xs font-medium text-green-700">Visual Output:</p>
+              <ImageIcon className={`w-4 h-4 ${
+                message.taskSource === 'auto' ? 'text-green-600' : 'text-blue-600'
+              }`} />
+              <p className={`text-xs font-medium ${
+                message.taskSource === 'auto' 
+                  ? 'text-green-700 dark:text-green-400' 
+                  : 'text-blue-700 dark:text-blue-400'
+              }`}>
+                Visual Output:
+              </p>
             </div>
             <div className="relative group">
               <img
-                src={message.outputImage.startsWith('http') ? message.outputImage : `${import.meta.env.VITE_API_URL || ''}${message.outputImage}`}
+                src={message.outputImage.startsWith('http') ? message.outputImage : (message.outputImage.startsWith('data:') ? message.outputImage : `${import.meta.env.VITE_API_URL || ''}${message.outputImage}`)}
                 alt="Model output visualization"
-                className="max-w-md rounded-lg border-2 border-green-200 shadow-md cursor-pointer hover:border-green-400 transition-colors"
+                className={`max-w-md rounded-lg border-2 shadow-md cursor-pointer transition-all ${
+                  imageRevealed ? 'image-reveal' : 'opacity-0'
+                } ${
+                  message.taskSource === 'auto'
+                    ? 'border-green-200 hover:border-green-400 dark:border-green-700 dark:hover:border-green-500'
+                    : 'border-blue-200 hover:border-blue-400 dark:border-blue-700 dark:hover:border-blue-500'
+                }`}
                 onClick={() => setShowFullImage(true)}
                 onError={(e) => { e.target.onerror = null; e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" fill="%23999"%3EImage unavailable%3C/text%3E%3C/svg%3E'; }}
               />
@@ -142,7 +206,7 @@ function Message({ message }) {
               >
                 <div className="relative max-w-4xl max-h-full">
                   <img
-                    src={message.outputImage.startsWith('http') ? message.outputImage : `${import.meta.env.VITE_API_URL || ''}${message.outputImage}`}
+                    src={message.outputImage.startsWith('http') ? message.outputImage : (message.outputImage.startsWith('data:') ? message.outputImage : `${import.meta.env.VITE_API_URL || ''}${message.outputImage}`)}
                     alt="Model output visualization (full size)"
                     className="max-w-full max-h-[90vh] rounded-lg"
                   />

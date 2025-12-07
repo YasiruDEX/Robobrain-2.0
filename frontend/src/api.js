@@ -71,4 +71,10 @@ export const getTasks = async () => {
   return response.data;
 };
 
+// Generate conversation title
+export const generateConversationTitle = async (message) => {
+  const response = await api.post('/generate-title', { message });
+  return response.data;
+};
+
 export default api;

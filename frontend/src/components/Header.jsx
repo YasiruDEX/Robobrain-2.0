@@ -18,7 +18,7 @@ function Header({ isConnected, sessionId, onToggleSidebar, sidebarOpen, darkMode
             <Bot className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">RoboBrain 2.0</h1>
+            <h1 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">EN4554 - Deep Learning for Vision Implementation</h1>
             <p className="text-xs text-gray-500 dark:text-gray-400">Vision-Language AI Assistant</p>
           </div>
         </div>

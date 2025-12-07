@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Image as ImageIcon, Loader2, Bot } from 'lucide-react';
 import { sendMessage, uploadImage } from '../api';
+import { annotateImage, parseCoordinates, resizeImageIfNeeded } from '../utils/imageAnnotation';
+import { generateAndSaveConversationName } from '../utils/chatHistory';
 import Message from './Message';
 
 function ChatContainer({
@@ -70,15 +72,44 @@ function ChatContainer({
         enableThinking,
       });
 
+      // If no output image but task requires visualization, annotate on frontend
+      let finalOutputImage = response.output_image;
+      
+      if (!finalOutputImage && response.task !== 'general' && currentImage?.preview) {
+        console.log('No backend image, attempting frontend annotation...');
+        const textToUse = response.answer || response.thinking || '';
+        const annotations = parseCoordinates(textToUse, response.task);
+        
+        if (annotations.points || annotations.boxes || annotations.trajectories) {
+          try {
+            finalOutputImage = await annotateImage(currentImage.preview, annotations);
+            console.log('✓ Frontend annotation successful');
+          } catch (err) {
+            console.error('Frontend annotation failed:', err);
+            finalOutputImage = currentImage.preview; // Fallback to original
+          }
+        } else {
+          console.log('No coordinates found to annotate');
+          finalOutputImage = currentImage.preview;
+        }
+      }
+
       // Update assistant message with response
       updateLastMessage({
         content: response.answer,
         thinking: response.thinking,
-        outputImage: response.output_image,
+        outputImage: finalOutputImage,
         task: response.task,
         taskSource: response.task_source,
         isLoading: false,
       });
+
+      // Generate conversation name for first user message
+      const userMessages = messages.filter(m => m.role === 'user');
+      if (userMessages.length === 0) {
+        // This is the first user message, generate a title
+        generateAndSaveConversationName(sessionId, userMessage.content);
+      }
     } catch (error) {
       console.error('Failed to send message:', error);
       updateLastMessage({
@@ -91,16 +122,48 @@ function ChatContainer({
     }
   };
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        onImageUpload({
-          file,
-          preview: reader.result,
-          name: file.name,
-        });
+      reader.onloadend = async () => {
+        const originalImage = reader.result;
+        
+        try {
+          // Resize image if needed (max dimension 2000px)
+          const resizedResult = await resizeImageIfNeeded(originalImage, 2000);
+          
+          if (resizedResult.scaleFactor < 1) {
+            console.log(`Image resized: ${resizedResult.originalWidth}x${resizedResult.originalHeight} → ${resizedResult.newWidth}x${resizedResult.newHeight}`);
+          }
+          
+          // Convert resized data URL back to File object for upload
+          const blob = await fetch(resizedResult.dataUrl).then(r => r.blob());
+          const resizedFile = new File([blob], file.name, { type: 'image/jpeg' });
+          
+          onImageUpload({
+            file: resizedFile,
+            preview: resizedResult.dataUrl,
+            name: file.name,
+            scaleFactor: resizedResult.scaleFactor,
+            originalDimensions: {
+              width: resizedResult.originalWidth,
+              height: resizedResult.originalHeight
+            },
+            newDimensions: {
+              width: resizedResult.newWidth,
+              height: resizedResult.newHeight
+            }
+          });
+        } catch (error) {
+          console.error('Failed to resize image:', error);
+          // Fallback to original if resize fails
+          onImageUpload({
+            file,
+            preview: originalImage,
+            name: file.name,
+          });
+        }
       };
       reader.readAsDataURL(file);
     }

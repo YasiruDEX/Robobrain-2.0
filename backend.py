@@ -158,12 +158,11 @@ app.config['RESULT_FOLDER'] = RESULT_FOLDER
 
 # Global model instance
 print("\nInitializing model... This may take a while.")
-print("Note: Using 8-bit quantization for GPU with limited VRAM")
 try:
     # Load model using the utility from scripts/utils.py
     # This will use local weights if available in 'weights/' folder
-    # load_in_8bit=True reduces memory from ~6GB to ~3GB
-    model, repo_dir = get_model(load_in_8bit=True)
+    # Note: UnifiedInference uses torch_dtype="auto" for optimal memory usage
+    model, repo_dir = get_model()
     print("Model initialized successfully.")
 except Exception as e:
     print(f"Error initializing model: {e}")

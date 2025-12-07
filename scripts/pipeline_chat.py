@@ -49,9 +49,18 @@ except ImportError:
 # Results directory
 RESULTS_DIR = pathlib.Path(__file__).parent.parent / "results" / "pipeline"
 
-# Groq API Key
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "your_groq_api_key_here")
-
+# Groq API Key - try to load from api_keys.py, then environment variable
+try:
+    import sys
+    sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
+    from api_keys import GROQ_API_KEY
+except ImportError:
+    GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+    if not GROQ_API_KEY:
+        print("\nERROR: GROQ_API_KEY not found.")
+        print("Either create api_keys.py with GROQ_API_KEY or set environment variable.")
+        print("See api_keys_template.py for the format.")
+        sys.exit(1)
 
 
 ROBOBRAIN_TASKS = {

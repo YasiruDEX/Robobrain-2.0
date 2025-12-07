@@ -10,13 +10,12 @@ function Message({ message }) {
     <div className={`flex gap-3 message-enter ${isUser ? 'flex-row-reverse' : ''}`}>
       {/* Avatar */}
       <div
-        className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${
-          isUser
+        className={`flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${isUser
             ? 'bg-blue-600 text-white'
             : message.isError
-            ? 'bg-red-500 text-white'
-            : 'bg-gradient-to-br from-purple-500 to-blue-600 text-white'
-        }`}
+              ? 'bg-red-500 text-white'
+              : 'bg-gradient-to-br from-purple-500 to-blue-600 text-white'
+          }`}
       >
         {isUser ? (
           <User className="w-5 h-5" />
@@ -42,13 +41,12 @@ function Message({ message }) {
 
         {/* Message Bubble */}
         <div
-          className={`inline-block px-4 py-3 rounded-2xl ${
-            isUser
+          className={`inline-block px-4 py-3 rounded-2xl ${isUser
               ? 'bg-blue-600 text-white rounded-br-md'
               : message.isError
-              ? 'bg-red-50 text-red-800 border border-red-200 rounded-bl-md'
-              : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md shadow-sm'
-          }`}
+                ? 'bg-red-50 text-red-800 border border-red-200 rounded-bl-md'
+                : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md shadow-sm'
+            }`}
         >
           {message.isLoading ? (
             <div className="flex items-center gap-2 text-gray-500">
@@ -75,25 +73,25 @@ function Message({ message }) {
           <div className="mt-2">
             <button
               onClick={() => setShowThinking(!showThinking)}
-              className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 transition-colors"
+              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
             >
               {showThinking ? (
                 <>
                   <ChevronUp className="w-4 h-4" />
-                  <span>Hide thinking</span>
+                  <span>Hide coordinates</span>
                 </>
               ) : (
                 <>
                   <ChevronDown className="w-4 h-4" />
-                  <span>Show thinking</span>
+                  <span>Show coordinates</span>
                 </>
               )}
             </button>
-            
+
             {(showThinking || !message.content) && (
-              <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-800">
-                <p className="text-xs font-medium text-purple-600 mb-1">🧠 Model's Reasoning:</p>
-                <div className="whitespace-pre-wrap">{message.thinking}</div>
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 font-mono">
+                <p className="text-xs font-medium text-blue-600 mb-1">📍 Raw Coordinates:</p>
+                <div className="whitespace-pre-wrap text-xs">{message.thinking}</div>
               </div>
             )}
           </div>
@@ -120,10 +118,10 @@ function Message({ message }) {
                 <ZoomIn className="w-4 h-4" />
               </button>
             </div>
-            
+
             {/* Full-screen Image Modal */}
             {showFullImage && (
-              <div 
+              <div
                 className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
                 onClick={() => setShowFullImage(false)}
               >

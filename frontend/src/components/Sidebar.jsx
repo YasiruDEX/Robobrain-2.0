@@ -26,8 +26,6 @@ function Sidebar({
   currentTask,
   onTaskChange,
   availableTasks,
-  enableThinking,
-  onThinkingChange,
   onNewChat,
   currentImage,
   onImageUpload,
@@ -171,38 +169,11 @@ function Sidebar({
           </div>
         </div>
 
-        {/* Thinking Mode Toggle */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Brain className="w-4 h-4 inline mr-1.5" />
-            Thinking Mode
-          </label>
-          
-          <button
-            onClick={() => onThinkingChange(!enableThinking)}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
-              enableThinking
-                ? 'bg-purple-50 border-purple-200 text-purple-700'
-                : 'bg-gray-50 border-gray-200 text-gray-600'
-            }`}
-          >
-            <span className="font-medium">
-              {enableThinking ? 'Enabled' : 'Disabled'}
-            </span>
-            <div
-              className={`w-10 h-6 rounded-full p-1 transition-colors ${
-                enableThinking ? 'bg-purple-500' : 'bg-gray-300'
-              }`}
-            >
-              <div
-                className={`w-4 h-4 bg-white rounded-full transition-transform ${
-                  enableThinking ? 'translate-x-4' : 'translate-x-0'
-                }`}
-              />
-            </div>
-          </button>
-          <p className="mt-1.5 text-xs text-gray-500">
-            When enabled, the model will show its reasoning process
+        {/* Model Info */}
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-xs font-medium text-blue-900 mb-1">💡 Using RoboBrain2.0-3B</p>
+          <p className="text-xs text-blue-700">
+            This model specializes in visual understanding and robotic task planning.
           </p>
         </div>
       </div>

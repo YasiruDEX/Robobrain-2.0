@@ -8,7 +8,7 @@ function App() {
   const [sessionId, setSessionId] = useState(null);
   const [currentImage, setCurrentImage] = useState(null);
   const [currentTask, setCurrentTask] = useState('general');
-  const [enableThinking, setEnableThinking] = useState(true);
+  const [enableThinking] = useState(false); // 3B model doesn't support thinking mode
   const [availableTasks, setAvailableTasks] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -79,8 +79,6 @@ function App() {
         currentTask={currentTask}
         onTaskChange={setCurrentTask}
         availableTasks={availableTasks}
-        enableThinking={enableThinking}
-        onThinkingChange={setEnableThinking}
         onNewChat={handleNewChat}
         currentImage={currentImage}
         onImageUpload={handleImageUpload}

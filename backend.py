@@ -310,7 +310,7 @@ def chat():
 
         print(f"Processing chat for session {session_id}: {message[:50]}...")
         
-        # Determine if we should plot
+        # Force plotting for all visual tasks (non-general tasks MUST show images)
         should_plot = task in ['pointing', 'affordance', 'trajectory', 'grounding']
 
         # Run inference inside the lock to prevent concurrent GPU usage
@@ -319,7 +319,7 @@ def chat():
                 prompt=message,
                 task=task,
                 enable_thinking=enable_thinking,
-                plot=should_plot
+                plot=should_plot  # Always True for visual tasks
             )
         finally:
             # Clean up GPU memory after inference

@@ -5,6 +5,9 @@ import Header from './components/Header';
 import { createSession, checkHealth, getTasks } from './api';
 import { saveChatHistory } from './utils/chatHistory';
 
+// Check if screen is mobile size
+const isMobileScreen = () => window.innerWidth < 768;
+
 function App() {
   const [sessionId, setSessionId] = useState(null);
   const [currentImage, setCurrentImage] = useState(null);
@@ -12,11 +15,27 @@ function App() {
   const [enableThinking] = useState(false); // 3B model doesn't support thinking mode
   const [availableTasks, setAvailableTasks] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(!isMobileScreen()); // Closed by default on mobile
+  const [isMobile, setIsMobile] = useState(isMobileScreen());
   const [messages, setMessages] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [complexMode, setComplexMode] = useState(false);
+
+  // Handle window resize for responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = isMobileScreen();
+      setIsMobile(mobile);
+      // Auto-close sidebar when switching to mobile
+      if (mobile && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [sidebarOpen]);
 
   // Handle dark mode
   useEffect(() => {
@@ -134,7 +153,15 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 overflow-hidden">
+      {/* Mobile Overlay Backdrop */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
@@ -149,10 +176,11 @@ function App() {
         currentSessionId={sessionId}
         complexMode={complexMode}
         onComplexModeChange={setComplexMode}
+        isMobile={isMobile}
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <Header
           isConnected={isConnected}
           sessionId={sessionId}
@@ -172,6 +200,7 @@ function App() {
           updateLastMessage={updateLastMessage}
           onImageUpload={handleImageUpload}
           complexMode={complexMode}
+          isMobile={isMobile}
         />
       </div>
     </div>

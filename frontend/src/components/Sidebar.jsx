@@ -41,6 +41,7 @@ function Sidebar({
   currentSessionId,
   complexMode,
   onComplexModeChange,
+  isMobile,
 }) {
   const [sessions, setSessions] = useState([]);
   const [showTasks, setShowTasks] = useState(false);
@@ -135,7 +136,14 @@ function Sidebar({
   if (!isOpen) return null;
 
   return (
-    <aside className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full shadow-xl transition-colors duration-200 overflow-hidden">
+    <aside className={`
+      ${isMobile
+        ? 'fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw]'
+        : 'w-80 relative'
+      }
+      bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 
+      flex flex-col h-full shadow-xl transition-all duration-300 overflow-hidden
+    `}>
       {/* Header - Fixed */}
       <div className="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="flex items-center justify-between mb-3">

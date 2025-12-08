@@ -5,6 +5,8 @@ import uuid
 import signal
 import psutil
 import atexit
+import json
+import re
 
 # Set PyTorch memory configuration to avoid fragmentation
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
@@ -108,6 +110,125 @@ def generate_conversation_name(first_message):
     except Exception as e:
         print(f"Groq title generation error: {e}")
         return None
+
+
+def decompose_complex_query(query):
+    """
+    Decompose a complex query into a pipeline of simple RoboBrain tasks using Groq.
+    
+    Returns a tuple: (pipeline, error_message)
+    - pipeline: list of task steps, or None if failed
+    - error_message: string describing what went wrong, or None if success
+    """
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        return None, "GROQ_API_KEY not found in environment variables. Please set it in .env file."
+    
+    try:
+        client = Groq(api_key=api_key)
+        
+        task_descriptions = """
+- general: General visual question answering - describe scenes, count objects, identify colors, explain content (Output: Text description or answer)
+- grounding: Locate and find objects in the image, returns bounding box coordinates [x1,y1,x2,y2] (Output: Bounding box coordinates)
+- affordance: Detect graspable areas and manipulation affordances, returns bounding box of graspable region (Output: Bounding box of graspable area)
+- trajectory: Plan motion paths and trajectories, returns sequence of waypoints [(x1,y1), (x2,y2), ...] (Output: List of waypoint coordinates)
+- pointing: Point to specific locations or identify what's at a point, returns single (x,y) coordinate (Output: Single point coordinate)
+"""
+        
+        system_prompt = f"""You are an expert task decomposition system for a robot vision model called RoboBrain.
+
+Your job is to break down complex user queries into a PIPELINE of simple, atomic tasks that RoboBrain can execute sequentially.
+
+AVAILABLE TASKS:
+{task_descriptions}
+
+═══════════════════════════════════════════════════════════════════════════════
+CRITICAL RULES FOR TASK DECOMPOSITION:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. **ALWAYS GROUND OBJECTS FIRST**: Before any manipulation (affordance) or movement (trajectory), 
+   you MUST first locate the object using "grounding" task.
+
+2. **TRAJECTORY PROMPTS MUST BE SPECIFIC**: 
+   - BAD: "move to the cup" (too vague)
+   - GOOD: "move the robot end-effector from current position to reach the red cup on the table"
+   
+3. **TRAJECTORY TASK DETAILS**:
+   - The trajectory task generates a sequence of (x, y) waypoints for robot motion
+   - Always specify: START point (current position / gripper / robot arm)
+   - Always specify: END point (the target object or location)
+   - Always specify: The ACTION (reach, move to, navigate, approach)
+   
+4. **AFFORDANCE BEFORE MANIPULATION**:
+   - Before picking up, always find the grasp point using "affordance"
+   
+5. **LOGICAL ORDERING**:
+   - Understand scene → grounding (find object) → trajectory (move to it) → affordance (grasp it)
+
+═══════════════════════════════════════════════════════════════════════════════
+OUTPUT FORMAT (JSON array):
+═══════════════════════════════════════════════════════════════════════════════
+[
+  {{
+    "step": 1,
+    "task": "task_type",
+    "prompt": "detailed, specific prompt for RoboBrain",
+    "description": "human-readable description",
+    "use_previous": false
+  }}
+]
+
+═══════════════════════════════════════════════════════════════════════════════
+EXAMPLES:
+═══════════════════════════════════════════════════════════════════════════════
+
+Query: "Pick up the red cup"
+Pipeline:
+[
+  {{"step": 1, "task": "grounding", "prompt": "the red cup", "description": "Locate the red cup in the scene", "use_previous": false}},
+  {{"step": 2, "task": "trajectory", "prompt": "move the robot end-effector from its current position to approach and reach the red cup for grasping", "description": "Generate motion trajectory to reach the cup", "use_previous": true}},
+  {{"step": 3, "task": "affordance", "prompt": "find the optimal grasp region on the red cup where the robot gripper should make contact to securely pick it up", "description": "Determine grasp point on the cup", "use_previous": true}}
+]
+
+Query: "What objects can I interact with?"
+Pipeline:
+[
+  {{"step": 1, "task": "general", "prompt": "List and describe all objects visible in this scene that could potentially be manipulated or interacted with by a robot", "description": "Identify all objects in scene", "use_previous": false}},
+  {{"step": 2, "task": "affordance", "prompt": "identify all graspable regions and manipulation affordances for the objects in the scene", "description": "Find interactable/graspable areas", "use_previous": true}}
+]
+
+IMPORTANT: Return ONLY the JSON array, no other text."""
+
+        print(f"[Decompose] Calling Groq API for query: {query[:50]}...")
+        
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Decompose this query into a pipeline of tasks: \"{query}\""}
+            ],
+            model="llama-3.3-70b-versatile",
+            temperature=0.2,
+            max_tokens=1000,
+        )
+        
+        response_text = chat_completion.choices[0].message.content.strip()
+        print(f"[Decompose] Groq response: {response_text[:300]}...")
+        
+        # Try to extract JSON from the response
+        json_match = re.search(r'\[[\s\S]*\]', response_text)
+        if json_match:
+            pipeline = json.loads(json_match.group())
+            print(f"[Decompose] Successfully decomposed query into {len(pipeline)} steps")
+            return pipeline, None
+        else:
+            error_msg = f"Could not parse JSON from response: {response_text[:200]}"
+            print(f"[Decompose] {error_msg}")
+            return None, error_msg
+            
+    except Exception as e:
+        error_msg = f"Groq API error: {str(e)}"
+        print(f"[Decompose] {error_msg}")
+        return None, error_msg
 
 def cleanup_old_processes():
     """Kill any existing backend.py processes to free GPU memory."""
@@ -451,6 +572,39 @@ def get_tasks():
         }
     ]
     return jsonify({"tasks": tasks})
+
+@app.route('/api/decompose', methods=['POST'])
+def decompose():
+    """Decompose a complex query into a pipeline of simple tasks."""
+    data = request.json
+    query = data.get('query', '')
+    
+    if not query:
+        return jsonify({"error": "Query is required"}), 400
+    
+    pipeline, error_msg = decompose_complex_query(query)
+    
+    if pipeline:
+        return jsonify({"pipeline": pipeline, "success": True})
+    else:
+        # Return a simple fallback - just use general task
+        fallback_pipeline = [
+            {
+                "step": 1,
+                "task": "general",
+                "prompt": query,
+                "description": "Execute the query as a general task (decomposition failed)",
+                "use_previous": False
+            }
+        ]
+        return jsonify({
+            "pipeline": fallback_pipeline, 
+            "success": True, 
+            "fallback": True,
+            "error": error_msg or "Unknown error during decomposition",
+            "message": f"Could not decompose query: {error_msg}"
+        })
+
 
 if __name__ == '__main__':
     print("\n" + "="*60)

@@ -77,4 +77,11 @@ export const generateConversationTitle = async (message) => {
   return response.data;
 };
 
+// Decompose complex query into pipeline steps
+export const decomposeQuery = async (query) => {
+  const response = await api.post('/decompose', { query });
+  return response.data;
+};
+
 export default api;
+

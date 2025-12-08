@@ -12,7 +12,9 @@ import {
   Trash2,
   Sparkles,
   Clock,
-  Zap
+  Zap,
+  Layers,
+  GitBranch
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getAllSessions, deleteSessionHistory } from '../utils/chatHistory';
@@ -37,6 +39,8 @@ function Sidebar({
   onImageUpload,
   onLoadSession,
   currentSessionId,
+  complexMode,
+  onComplexModeChange,
 }) {
   const [sessions, setSessions] = useState([]);
   const [showTasks, setShowTasks] = useState(false);
@@ -131,9 +135,9 @@ function Sidebar({
   if (!isOpen) return null;
 
   return (
-    <aside className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full shadow-xl transition-colors duration-200">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+    <aside className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full shadow-xl transition-colors duration-200 overflow-hidden">
+      {/* Header - Fixed */}
+      <div className="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-bold text-gray-800 dark:text-white">RoboBrain 2.0</h2>
           <button
@@ -154,8 +158,8 @@ function Sidebar({
         </button>
       </div>
 
-      {/* Chat History Section */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Chat History Section - Scrollable, takes remaining space */}
+      <div className="flex-1 overflow-y-auto min-h-0">
         <div className="p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -182,22 +186,22 @@ function Sidebar({
                   key={session.sessionId}
                   onClick={() => handleLoadSession(session.sessionId, session.messages, session.metadata)}
                   className={`group relative p-3 rounded-lg cursor-pointer transition-all duration-200 border ${session.sessionId === currentSessionId
-                      ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-600 shadow-sm'
-                      : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-sm'
+                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 dark:border-blue-600 shadow-sm'
+                    : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-sm'
                     }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm font-medium truncate ${session.sessionId === currentSessionId
-                          ? 'text-blue-900 dark:text-blue-100'
-                          : 'text-gray-900 dark:text-gray-100'
+                        ? 'text-blue-900 dark:text-blue-100'
+                        : 'text-gray-900 dark:text-gray-100'
                         }`}>
                         {getSessionTitle(session)}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`text-xs ${session.sessionId === currentSessionId
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : 'text-gray-500 dark:text-gray-400'
+                          ? 'text-blue-600 dark:text-blue-400'
+                          : 'text-gray-500 dark:text-gray-400'
                           }`}>
                           {formatTimestamp(session.metadata?.updatedAt)}
                         </span>
@@ -220,11 +224,11 @@ function Sidebar({
         </div>
       </div>
 
-      {/* Collapsible Task & Image Section */}
-      <div className="border-t border-gray-200 dark:border-gray-700">
+      {/* Task & Image Section - Fixed at bottom with max-height scroll */}
+      <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <button
           onClick={() => setShowTasks(!showTasks)}
-          className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+          className="w-full p-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
         >
           <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
             <Target className="w-4 h-4" />
@@ -241,7 +245,7 @@ function Sidebar({
         </button>
 
         {showTasks && (
-          <div className="p-4 space-y-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+          <div className="max-h-80 overflow-y-auto p-4 space-y-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
             {/* Image Upload */}
             <div>
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -296,8 +300,8 @@ function Sidebar({
                       key={task.id}
                       onClick={() => onTaskChange(task.id)}
                       className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all duration-200 ${currentTask === task.id
-                          ? 'bg-blue-600 text-white shadow-md'
-                          : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800'
                         }`}
                     >
                       <Icon className="w-4 h-4 flex-shrink-0" />
@@ -307,12 +311,52 @@ function Sidebar({
                 })}
               </div>
             </div>
+
+            {/* Complex Instructions Toggle */}
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-600">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <GitBranch className={`w-4 h-4 ${complexMode ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500'}`} />
+                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Complex Pipeline
+                  </label>
+                </div>
+                <button
+                  onClick={() => onComplexModeChange(!complexMode)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${complexMode
+                    ? 'bg-gradient-to-r from-purple-500 to-purple-600'
+                    : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200 ${complexMode ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                  />
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5 ml-6">
+                {complexMode
+                  ? '✨ Complex queries will be broken into sequential sub-tasks'
+                  : 'Enable to decompose complex queries into pipeline steps'}
+              </p>
+              {complexMode && (
+                <div className="mt-2 p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <div className="flex items-center gap-1.5 text-xs text-purple-700 dark:text-purple-300">
+                    <Layers className="w-3 h-3" />
+                    <span className="font-medium">Pipeline Mode Active</span>
+                  </div>
+                  <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                    Queries like "pick up the cup" will auto-decompose into: ground → trajectory → affordance
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Footer */}
-      <div className="p-3 border-t border-gray-200 dark:border-gray-700 text-center bg-gray-50 dark:bg-gray-800/50">
+      {/* Footer - Fixed */}
+      <div className="flex-shrink-0 p-3 border-t border-gray-200 dark:border-gray-700 text-center bg-gray-50 dark:bg-gray-800/50">
         <p className="text-xs text-gray-400 dark:text-gray-500">
           Yasiru Basnayake & Jayamadu Gammune
         </p>

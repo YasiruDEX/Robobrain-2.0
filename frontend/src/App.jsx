@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import ChatContainer from './components/ChatContainer';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import HistorySidebar from './components/HistorySidebar';
 import { createSession, checkHealth, getTasks } from './api';
-import { saveChatHistory, getSessionHistory, getCurrentSessionId } from './utils/chatHistory';
+import { saveChatHistory } from './utils/chatHistory';
 
 function App() {
   const [sessionId, setSessionId] = useState(null);
@@ -17,6 +16,7 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [complexMode, setComplexMode] = useState(false);
 
   // Handle dark mode
   useEffect(() => {
@@ -39,30 +39,10 @@ function App() {
         const tasksData = await getTasks();
         setAvailableTasks(tasksData.tasks || []);
 
-        // Try to restore previous session
-        const previousSessionId = getCurrentSessionId();
-        if (previousSessionId) {
-          const savedHistory = getSessionHistory(previousSessionId);
-          if (savedHistory && savedHistory.messages && savedHistory.messages.length > 0) {
-            setSessionId(previousSessionId);
-            setMessages(savedHistory.messages);
-            
-            // Restore task and image from metadata
-            if (savedHistory.metadata) {
-              if (savedHistory.metadata.task) {
-                setCurrentTask(savedHistory.metadata.task);
-              }
-              // Note: We don't restore currentImage as it's handled by message content
-            }
-            
-            console.log(`Restored session: ${previousSessionId} with ${savedHistory.messages.length} messages`);
-            return;
-          }
-        }
-
-        // Create new session if no previous session
+        // Always create a new session on app start
         const session = await createSession();
         setSessionId(session.session_id);
+        console.log('Created new session:', session.session_id);
       } catch (error) {
         console.error('Failed to initialize:', error);
         setIsConnected(false);
@@ -114,16 +94,16 @@ function App() {
       await handleNewChat();
       return;
     }
-    
+
     // Load the selected session
     setSessionId(loadedSessionId);
     setMessages(loadedMessages);
-    
+
     // Restore metadata
     if (metadata.task) {
       setCurrentTask(metadata.task);
     }
-    
+
     // Extract image from last message if exists
     const lastMessageWithImage = [...loadedMessages].reverse().find(m => m.image);
     if (lastMessageWithImage) {
@@ -131,7 +111,7 @@ function App() {
     } else {
       setCurrentImage(null);
     }
-    
+
     setShowHistory(false);
     console.log(`Loaded session: ${loadedSessionId} with ${loadedMessages.length} messages`);
   };
@@ -167,6 +147,8 @@ function App() {
         onImageUpload={handleImageUpload}
         onLoadSession={handleLoadSession}
         currentSessionId={sessionId}
+        complexMode={complexMode}
+        onComplexModeChange={setComplexMode}
       />
 
       {/* Main Content */}
@@ -189,6 +171,7 @@ function App() {
           addMessage={addMessage}
           updateLastMessage={updateLastMessage}
           onImageUpload={handleImageUpload}
+          complexMode={complexMode}
         />
       </div>
     </div>

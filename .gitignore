@@ -18,3 +18,33 @@ build/
 dist/
 *.egg-info/
 api_keys.py
+
+# paper / LaTeX
+paper/
+RoboBrain3.0/
+*.aux
+*.log
+*.synctex.gz
+
+# Paper / LaTeX sources (kept local)
+paper/
+RoboBrain3.0/
+*.aux
+*.bbl
+*.blg
+*.out
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+
+# Downloaded benchmark datasets (third-party, ~330 MB, re-fetchable)
+data/
+
+# Run logs and process files
+logs/
+*.log
+*.pid
+
+# Backup copies
+*.bak
+*.bak_*
